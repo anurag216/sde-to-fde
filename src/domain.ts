@@ -12,18 +12,13 @@ export type SkillId =
 
 export type TrackId = 'backend-platform' | 'ai-engineering' | 'fde' | 'technical-leadership'
 
-export type Skill = {
-  id: SkillId
-  name: string
-  description: string
-  target: 'core' | 'career-path' | 'parallel'
-}
-
+export type Skill = { id: SkillId; name: string; description: string; target: 'core' | 'career-path' | 'parallel' }
 export type ChallengeType = 'multiple-choice' | 'free-response' | 'coding'
 export type CodeLanguage = 'typescript' | 'javascript' | 'python'
 export type AssistanceLevel = 1 | 2 | 3 | 4 | 5 | 6
 export type EvidenceSignal = 'strong' | 'partial' | 'weak' | 'unknown'
 export type GapStatus = 'evidenced' | 'not-evidenced' | 'unknown'
+export type MissionKind = 'engineering' | 'dsa' | 'review'
 
 export type CodeTest = { name: string; args: unknown[]; expected: unknown; hidden?: boolean }
 export type CodingConfig = { functionName: string; languages: CodeLanguage[]; starterCode: Record<CodeLanguage, string>; tests: CodeTest[]; timeLimitMs: number }
@@ -43,6 +38,9 @@ export type Challenge = {
   coding?: CodingConfig
   rubric?: RubricCriterion[]
   hints?: string[]
+  kind?: MissionKind
+  minutes?: number
+  outcome?: string
 }
 
 export type CodeRunTestResult = { name: string; passed: boolean; expected?: unknown; actual?: unknown; error?: string }
@@ -54,49 +52,15 @@ export type TutorHint = { id: string; challengeId: string; createdAt: string; le
 export type TutorEvidence = { evaluations: TutorEvaluation[]; hints: TutorHint[] }
 
 export type TrackInterest = Record<TrackId, number>
+export type ProfileEvidence = { id: string; challengeId: string; kind: 'objective' | 'code' | 'tutor' | 'attempt'; label: string; detail: string; value?: number; weight: number }
+export type SkillProfile = { skillId: SkillId; mastery: number | null; confidence: number; evidence: ProfileEvidence[]; gaps: { implementation: GapStatus; vocabulary: GapStatus; design: GapStatus; retention: GapStatus } }
+export type TrackRecommendation = { trackId: TrackId; score: number; evidenceConfidence: number; reason: string }
 
-export type ProfileEvidence = {
-  id: string
-  challengeId: string
-  kind: 'objective' | 'code' | 'tutor' | 'attempt'
-  label: string
-  detail: string
-  value?: number
-  weight: number
-}
-
-export type SkillProfile = {
-  skillId: SkillId
-  mastery: number | null
-  confidence: number
-  evidence: ProfileEvidence[]
-  gaps: {
-    implementation: GapStatus
-    vocabulary: GapStatus
-    design: GapStatus
-    retention: GapStatus
-  }
-}
-
-export type TrackRecommendation = {
-  trackId: TrackId
-  score: number
-  evidenceConfidence: number
-  reason: string
-}
-
-export type MissionKind = 'engineering' | 'dsa' | 'review'
-export type MissionDefinition = {
-  id: string
-  title: string
-  kind: MissionKind
-  skills: SkillId[]
-  tracks: TrackId[]
-  minutes: number
-  outcome: string
-}
+export type MissionDefinition = { id: string; title: string; kind: MissionKind; skills: SkillId[]; tracks: TrackId[]; minutes: number; outcome: string }
 export type RoadmapItem = MissionDefinition & { why: string }
 export type RoadmapWeek = { week: number; theme: string; items: RoadmapItem[] }
+
+export type MissionCompletion = { challengeId: string; completedAt: string; xpAwarded: number; maxHintLevel: number }
 
 export type LearnerState = {
   xp: number
@@ -107,4 +71,5 @@ export type LearnerState = {
   codeRuns: Record<string, CodeRunResult[]>
   tutor: Record<string, TutorEvidence>
   trackInterest: TrackInterest
+  missionCompletions: MissionCompletion[]
 }
