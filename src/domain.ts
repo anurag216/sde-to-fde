@@ -18,6 +18,22 @@ export type Skill = {
 }
 
 export type ChallengeType = 'multiple-choice' | 'free-response' | 'coding'
+export type CodeLanguage = 'typescript' | 'javascript' | 'python'
+
+export type CodeTest = {
+  name: string
+  args: unknown[]
+  expected: unknown
+  hidden?: boolean
+}
+
+export type CodingConfig = {
+  functionName: string
+  languages: CodeLanguage[]
+  starterCode: Record<CodeLanguage, string>
+  tests: CodeTest[]
+  timeLimitMs: number
+}
 
 export type Challenge = {
   id: string
@@ -30,6 +46,27 @@ export type Challenge = {
   correctOption?: number
   placeholder?: string
   evidence: string
+  coding?: CodingConfig
+}
+
+export type CodeRunTestResult = {
+  name: string
+  passed: boolean
+  expected?: unknown
+  actual?: unknown
+  error?: string
+}
+
+export type CodeRunResult = {
+  id: string
+  challengeId: string
+  language: CodeLanguage
+  source: string
+  startedAt: string
+  durationMs: number
+  status: 'passed' | 'failed' | 'error' | 'timeout'
+  tests: CodeRunTestResult[]
+  error?: string
 }
 
 export type Attempt = {
@@ -43,4 +80,7 @@ export type LearnerState = {
   xp: number
   currentChallengeIndex: number
   attempts: Attempt[]
+  drafts: Record<string, string>
+  languages: Record<string, CodeLanguage>
+  codeRuns: Record<string, CodeRunResult[]>
 }

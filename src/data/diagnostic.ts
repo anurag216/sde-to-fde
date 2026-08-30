@@ -1,5 +1,13 @@
 import type { Challenge } from '../domain'
 
+const requestFixture = [
+  { id: 'r1', employee: 'alice', status: 'pending' },
+  { id: 'r2', employee: 'bob', status: 'pending' },
+  { id: 'r3', employee: 'alice', status: 'pending' },
+  { id: 'r1', employee: 'alice', status: 'pending' },
+  { id: 'r4', employee: 'bob', status: 'approved' },
+]
+
 export const diagnosticChallenges: Challenge[] = [
   {
     id: 'request-dedup',
@@ -69,8 +77,39 @@ export const diagnosticChallenges: Challenge[] = [
     scenario: 'Implement the request grouping logic from the first challenge. Input can be large, only pending requests count, and IDs must be unique.',
     type: 'coding',
     skills: ['programming', 'dsa'],
-    prompt: 'Write a function in TypeScript, JavaScript, Python, or pseudocode. Then add one sentence describing the time complexity you believe it has.',
+    prompt: 'Implement groupPending(requests). Return an object/dictionary keyed by employee where each value is an array of unique pending request IDs.',
     placeholder: '// Write the solution you would naturally produce at work\n',
-    evidence: 'Captures implementation ability and complexity vocabulary. Automated execution is intentionally not wired in alpha 0.1.',
+    evidence: 'Tests implementation ability, hash-based data structures, edge cases and performance intuition.',
+    coding: {
+      functionName: 'groupPending',
+      languages: ['typescript', 'javascript', 'python'],
+      timeLimitMs: 2000,
+      starterCode: {
+        typescript: `type Request = { id: string; employee: string; status: string }\n\nfunction groupPending(requests: Request[]): Record<string, string[]> {\n  // Your implementation\n  return {}\n}`,
+        javascript: `function groupPending(requests) {\n  // Your implementation\n  return {}\n}`,
+        python: `def groupPending(requests):\n    # Your implementation\n    return {}`,
+      },
+      tests: [
+        {
+          name: 'groups pending requests and removes duplicate IDs',
+          args: [requestFixture],
+          expected: { alice: ['r1', 'r3'], bob: ['r2'] },
+        },
+        {
+          name: 'ignores non-pending requests',
+          args: [[
+            { id: 'a', employee: 'sam', status: 'approved' },
+            { id: 'b', employee: 'sam', status: 'rejected' },
+          ]],
+          expected: {},
+        },
+        {
+          name: 'handles empty input',
+          args: [[]],
+          expected: {},
+          hidden: true,
+        },
+      ],
+    },
   },
 ]
