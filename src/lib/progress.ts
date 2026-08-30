@@ -1,7 +1,7 @@
 import type { LearnerState } from '../domain'
 
-const KEY = 'sde-to-fde:learner-state:v4'
-const PREVIOUS_KEYS = ['sde-to-fde:learner-state:v3']
+const KEY = 'sde-to-fde:learner-state:v5'
+const PREVIOUS_KEYS = ['sde-to-fde:learner-state:v4', 'sde-to-fde:learner-state:v3']
 
 export const emptyState: LearnerState = {
   xp: 0,
@@ -13,6 +13,7 @@ export const emptyState: LearnerState = {
   tutor: {},
   trackInterest: { 'backend-platform': 4, 'ai-engineering': 4, fde: 4, 'technical-leadership': 3 },
   missionCompletions: [],
+  reviewCompletions: [],
 }
 
 export function loadState(): LearnerState {
@@ -24,7 +25,7 @@ export function loadState(): LearnerState {
       ...emptyState,
       ...parsed,
       drafts: parsed.drafts ?? {}, languages: parsed.languages ?? {}, codeRuns: parsed.codeRuns ?? {}, tutor: parsed.tutor ?? {},
-      attempts: parsed.attempts ?? [], missionCompletions: parsed.missionCompletions ?? [],
+      attempts: parsed.attempts ?? [], missionCompletions: parsed.missionCompletions ?? [], reviewCompletions: parsed.reviewCompletions ?? [],
       trackInterest: { ...emptyState.trackInterest, ...(parsed.trackInterest ?? {}) },
     }
     localStorage.setItem(KEY, JSON.stringify(hydrated))
