@@ -1,4 +1,5 @@
 import { diagnosticChallenges } from '../data/diagnostic'
+import { getLearningChallenge } from '../data/learningChallenges'
 import { skills } from '../data/skills'
 import type { EvidenceSignal, GapStatus, LearnerState, ProfileEvidence, SkillId, SkillProfile, TrackId, TrackInterest, TrackRecommendation } from '../domain'
 
@@ -24,6 +25,7 @@ export function buildSkillProfile(state: LearnerState): SkillProfile[] {
     let implementation: GapStatus = 'unknown'
     let vocabulary: GapStatus = 'unknown'
     let design: GapStatus = 'unknown'
+    let retention: GapStatus = 'unknown'
 
     for (const challenge of diagnosticChallenges.filter((item) => item.skills.includes(skill.id))) {
       const attempt = state.attempts.find((item) => item.challengeId === challenge.id)
@@ -61,13 +63,33 @@ export function buildSkillProfile(state: LearnerState): SkillProfile[] {
       }
     }
 
+    const relatedReviews = state.reviewCompletions
+      .map((review) => ({ review, challenge: getLearningChallenge(review.challengeId) }))
+      .filter(({ challenge }) => challenge?.skills.includes(skill.id))
+      .sort((a, b) => a.review.completedAt.localeCompare(b.review.completedAt))
+
+    for (const { review, challenge } of relatedReviews) {
+      const value = review.rating === 'easy' ? 1 : review.rating === 'okay' ? 0.82 : 0.55
+      evidence.push({
+        id: `review:${review.id}:${skill.id}`,
+        challengeId: review.challengeId,
+        kind: 'review',
+        label: challenge?.title ?? 'Delayed review',
+        detail: `Delayed active-recall review rated ${review.rating}; fresh evidence recorded at ${review.evidenceAt}.`,
+        value,
+        weight: 0.8,
+      })
+    }
+    const latestReview = relatedReviews.at(-1)?.review
+    if (latestReview) retention = latestReview.rating === 'hard' ? 'evidenced' : 'not-evidenced'
+
     const scored = evidence.filter((item) => typeof item.value === 'number')
     const totalWeight = scored.reduce((sum, item) => sum + item.weight, 0)
     const mastery = totalWeight === 0 ? null : Math.round(100 * scored.reduce((sum, item) => sum + (item.value ?? 0) * item.weight, 0) / totalWeight)
     const confidenceWeight = evidence.reduce((sum, item) => sum + item.weight, 0)
     const confidence = Math.round(clamp((confidenceWeight / 3.2) * 100))
 
-    return { skillId: skill.id, mastery, confidence, evidence, gaps: { implementation, vocabulary, design, retention: 'unknown' } }
+    return { skillId: skill.id, mastery, confidence, evidence, gaps: { implementation, vocabulary, design, retention } }
   })
 }
 
