@@ -1,3 +1,4 @@
+import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createApiApp } from './app'
@@ -8,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 async function start() {
   if (process.env.NODE_ENV === 'production') {
-    app.use(await import('express').then(({ default: express }) => express.static(path.join(root, 'dist'))))
+    app.use(express.static(path.join(root, 'dist')))
     app.use((_req, res) => res.sendFile(path.join(root, 'dist', 'index.html')))
   } else {
     const { createServer } = await import('vite')
