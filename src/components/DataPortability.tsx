@@ -1,6 +1,7 @@
 import { ChangeEvent, useRef, useState } from 'react'
 import type { LearnerState } from '../domain'
 import { parseLearnerStateBackup, serializeLearnerState } from '../lib/portability'
+import './DataPortability.css'
 
 export function DataPortability({ state, onImport }: { state: LearnerState; onImport: (state: LearnerState) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
