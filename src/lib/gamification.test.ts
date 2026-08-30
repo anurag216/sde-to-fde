@@ -6,7 +6,7 @@ import { buildSkillProfile } from './profile'
 import { generateRoadmap } from './roadmap'
 import type { LearnerState } from '../domain'
 
-const base: LearnerState = { xp:0,currentChallengeIndex:0,attempts:[],drafts:{},languages:{},codeRuns:{},tutor:{},trackInterest:{'backend-platform':4,'ai-engineering':4,fde:4,'technical-leadership':3},missionCompletions:[] }
+const base: LearnerState = { xp:0,currentChallengeIndex:0,attempts:[],drafts:{},languages:{},codeRuns:{},tutor:{},trackInterest:{'backend-platform':4,'ai-engineering':4,fde:4,'technical-leadership':3},missionCompletions:[],reviewCompletions:[] }
 
 test('catalog exposes exactly twenty first learning challenges',()=>assert.equal(learningChallenges.length,20))
 test('assistance reduces bonus but never to zero',()=>{assert.equal(missionXpForHintLevel(0),65);assert.equal(missionXpForHintLevel(2),55);assert.equal(missionXpForHintLevel(6),35)})
