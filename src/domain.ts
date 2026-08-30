@@ -18,6 +18,7 @@ export type CodeLanguage = 'typescript' | 'javascript' | 'python'
 export type AssistanceLevel = 1 | 2 | 3 | 4 | 5 | 6
 export type EvidenceSignal = 'strong' | 'partial' | 'weak' | 'unknown'
 export type GapStatus = 'evidenced' | 'not-evidenced' | 'unknown'
+export type MissionKind = 'engineering' | 'dsa' | 'review'
 
 export type CodeTest = { name: string; args: unknown[]; expected: unknown; hidden?: boolean }
 export type CodingConfig = { functionName: string; languages: CodeLanguage[]; starterCode: Record<CodeLanguage, string>; tests: CodeTest[]; timeLimitMs: number }
@@ -37,6 +38,9 @@ export type Challenge = {
   coding?: CodingConfig
   rubric?: RubricCriterion[]
   hints?: string[]
+  kind?: MissionKind
+  minutes?: number
+  outcome?: string
 }
 
 export type CodeRunTestResult = { name: string; passed: boolean; expected?: unknown; actual?: unknown; error?: string }
@@ -52,7 +56,6 @@ export type ProfileEvidence = { id: string; challengeId: string; kind: 'objectiv
 export type SkillProfile = { skillId: SkillId; mastery: number | null; confidence: number; evidence: ProfileEvidence[]; gaps: { implementation: GapStatus; vocabulary: GapStatus; design: GapStatus; retention: GapStatus } }
 export type TrackRecommendation = { trackId: TrackId; score: number; evidenceConfidence: number; reason: string }
 
-export type MissionKind = 'engineering' | 'dsa' | 'review'
 export type MissionDefinition = { id: string; title: string; kind: MissionKind; skills: SkillId[]; tracks: TrackId[]; minutes: number; outcome: string }
 export type RoadmapItem = MissionDefinition & { why: string }
 export type RoadmapWeek = { week: number; theme: string; items: RoadmapItem[] }
