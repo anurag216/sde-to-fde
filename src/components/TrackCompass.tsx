@@ -1,0 +1,7 @@
+import type { TrackId, TrackInterest, TrackRecommendation } from '../domain'
+
+const names: Record<TrackId, string> = { 'backend-platform': 'Backend / Platform', 'ai-engineering': 'AI Engineering', fde: 'Forward Deployed Engineering', 'technical-leadership': 'Technical Leadership' }
+
+export function TrackCompass({ interest, recommendations, onChange }: { interest: TrackInterest; recommendations: TrackRecommendation[]; onChange: (track: TrackId, value: number) => void }) {
+  return <section className="track-compass"><div className="section-heading"><div><p className="eyebrow">CAREER COMPASS</p><h2>Explore paths without locking yourself in.</h2></div><p>Interest drives 65% of the provisional ranking; demonstrated related evidence drives 35%. Low-confidence evidence is pulled toward neutral instead of overfitting one diagnostic.</p></div><div className="track-grid">{recommendations.map((item) => <article key={item.trackId}><div className="track-score"><div><strong>{names[item.trackId]}</strong><small>evidence confidence {item.evidenceConfidence}%</small></div><b>{item.score}</b></div><div className="mini-progress"><i style={{ width: `${item.score}%` }} /></div><label>Interest <input type="range" min="1" max="5" step="1" value={interest[item.trackId]} onChange={(event) => onChange(item.trackId, Number(event.target.value))} /><span>{interest[item.trackId]}/5</span></label><p>{item.reason}</p></article>)}</div></section>
+}

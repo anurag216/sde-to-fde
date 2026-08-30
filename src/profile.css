@@ -1,0 +1,51 @@
+.top-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 30px; }
+.top-nav button { background: transparent; color: #8d96a6; border: 1px solid #2b313d; padding: 8px 12px; font-size: .78rem; }
+.top-nav button.active { color: #d9ff64; border-color: #566239; }
+.view-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 28px; }
+.view-nav .back { margin: 0; }
+.view-header { margin-bottom: 28px; max-width: 850px; }
+.view-header h1 { margin: 6px 0 10px; font-size: clamp(2.8rem, 7vw, 5.8rem); line-height: .95; letter-spacing: -.055em; }
+.view-header > p:last-child { color: #8e97a6; line-height: 1.6; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.profile-card { border: 1px solid #282f3b; border-radius: 17px; background: #0f1218; padding: 20px; }
+.profile-card-head { display: flex; justify-content: space-between; gap: 18px; }
+.profile-card-head small { color: #697383; text-transform: uppercase; font-size: .68rem; letter-spacing: .1em; }
+.profile-card-head h2 { margin: 4px 0 15px; }
+.profile-card-head > strong { font-size: 2.1rem; color: #d9ff64; }
+.confidence-line { display: flex; justify-content: space-between; color: #7e8796; font-size: .75rem; }
+.confidence-line b { color: #aab2c0; }
+.mini-progress { height: 5px; background: #242a34; border-radius: 99px; overflow: hidden; margin: 7px 0 16px; }
+.mini-progress i { display: block; height: 100%; border-radius: inherit; background: #c5b9ff; }
+.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 15px; }
+.gap-grid span { border: 1px solid #252c36; border-radius: 9px; padding: 8px; color: #727c8b; font-size: .68rem; }
+.gap-grid b { display: block; color: #9ca5b4; margin-top: 2px; }
+.profile-card details { border-top: 1px solid #272d37; padding-top: 12px; }
+.profile-card summary { color: #858f9e; cursor: pointer; font-size: .78rem; }
+.evidence-list { list-style: none; padding: 0; display: grid; gap: 8px; }
+.evidence-list li { display: grid; gap: 2px; border-left: 2px solid #3b4350; padding-left: 9px; }
+.evidence-list b { color: #7f8999; text-transform: uppercase; font-size: .63rem; }
+.evidence-list span, .empty-copy { color: #858e9d; font-size: .76rem; line-height: 1.45; }
+.track-compass { margin: 55px 0; }
+.track-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.track-grid article { border: 1px solid #282f3a; border-radius: 15px; padding: 17px; background: #0e1117; }
+.track-score { display: flex; justify-content: space-between; gap: 14px; }
+.track-score strong, .track-score small { display: block; }
+.track-score small { color: #697383; margin-top: 3px; font-size: .68rem; }
+.track-score > b { font-size: 1.8rem; color: #c5b9ff; }
+.track-grid label { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; color: #778191; font-size: .72rem; }
+.track-grid input { accent-color: #d9ff64; }
+.track-grid p { margin-bottom: 0; color: #737d8c; font-size: .78rem; line-height: 1.5; }
+.weeks { display: grid; gap: 22px; }
+.week-card { display: grid; grid-template-columns: 230px 1fr; gap: 22px; }
+.week-title { position: sticky; top: 18px; align-self: start; }
+.week-title span { color: #d9ff64; letter-spacing: .12em; font-size: .7rem; font-weight: 850; }
+.week-title h2 { margin: 7px 0; font-size: 1.4rem; }
+.roadmap-items { display: grid; gap: 9px; }
+.roadmap-items article { border: 1px solid #282f3a; border-radius: 14px; background: #0f1218; padding: 17px; }
+.roadmap-items h3 { margin: 10px 0 6px; }
+.roadmap-items p { margin: 0 0 12px; color: #8b94a3; }
+.roadmap-items small { color: #747e8d; line-height: 1.5; }
+.roadmap-meta { display: flex; flex-wrap: wrap; gap: 5px; }
+.roadmap-meta span { border: 1px solid #2e3541; border-radius: 999px; padding: 4px 7px; color: #737d8d; font-size: .63rem; }
+@media (max-width: 800px) { .profile-grid, .track-grid { grid-template-columns: 1fr; } .week-card { grid-template-columns: 1fr; } .week-title { position: static; } }
+@media (max-width: 520px) { .view-nav { align-items: stretch; flex-direction: column; } .gap-grid { grid-template-columns: 1fr; } }

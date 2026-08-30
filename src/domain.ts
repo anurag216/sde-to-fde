@@ -10,6 +10,8 @@ export type SkillId =
   | 'fde'
   | 'technical-leadership'
 
+export type TrackId = 'backend-platform' | 'ai-engineering' | 'fde' | 'technical-leadership'
+
 export type Skill = {
   id: SkillId
   name: string
@@ -21,29 +23,11 @@ export type ChallengeType = 'multiple-choice' | 'free-response' | 'coding'
 export type CodeLanguage = 'typescript' | 'javascript' | 'python'
 export type AssistanceLevel = 1 | 2 | 3 | 4 | 5 | 6
 export type EvidenceSignal = 'strong' | 'partial' | 'weak' | 'unknown'
+export type GapStatus = 'evidenced' | 'not-evidenced' | 'unknown'
 
-export type CodeTest = {
-  name: string
-  args: unknown[]
-  expected: unknown
-  hidden?: boolean
-}
-
-export type CodingConfig = {
-  functionName: string
-  languages: CodeLanguage[]
-  starterCode: Record<CodeLanguage, string>
-  tests: CodeTest[]
-  timeLimitMs: number
-}
-
-export type RubricCriterion = {
-  id: string
-  label: string
-  description: string
-  skills: SkillId[]
-  keywords?: string[]
-}
+export type CodeTest = { name: string; args: unknown[]; expected: unknown; hidden?: boolean }
+export type CodingConfig = { functionName: string; languages: CodeLanguage[]; starterCode: Record<CodeLanguage, string>; tests: CodeTest[]; timeLimitMs: number }
+export type RubricCriterion = { id: string; label: string; description: string; skills: SkillId[]; keywords?: string[] }
 
 export type Challenge = {
   id: string
@@ -61,66 +45,58 @@ export type Challenge = {
   hints?: string[]
 }
 
-export type CodeRunTestResult = {
-  name: string
-  passed: boolean
-  expected?: unknown
-  actual?: unknown
-  error?: string
-}
+export type CodeRunTestResult = { name: string; passed: boolean; expected?: unknown; actual?: unknown; error?: string }
+export type CodeRunResult = { id: string; challengeId: string; language: CodeLanguage; source: string; startedAt: string; durationMs: number; status: 'passed' | 'failed' | 'error' | 'timeout'; tests: CodeRunTestResult[]; error?: string }
+export type Attempt = { challengeId: string; answer: string; objectiveCorrect?: boolean; completedAt: string }
+export type TutorSkillSignal = { skill: SkillId; signal: EvidenceSignal; rationale: string }
+export type TutorEvaluation = { id: string; challengeId: string; createdAt: string; source: 'ai' | 'local-rubric'; summary: string; strengths: string[]; gaps: string[]; terminology: string[]; misconceptionTags: string[]; nextQuestion: string; signals: TutorSkillSignal[] }
+export type TutorHint = { id: string; challengeId: string; createdAt: string; level: AssistanceLevel; text: string; source: 'ai' | 'preauthored' }
+export type TutorEvidence = { evaluations: TutorEvaluation[]; hints: TutorHint[] }
 
-export type CodeRunResult = {
+export type TrackInterest = Record<TrackId, number>
+
+export type ProfileEvidence = {
   id: string
   challengeId: string
-  language: CodeLanguage
-  source: string
-  startedAt: string
-  durationMs: number
-  status: 'passed' | 'failed' | 'error' | 'timeout'
-  tests: CodeRunTestResult[]
-  error?: string
+  kind: 'objective' | 'code' | 'tutor' | 'attempt'
+  label: string
+  detail: string
+  value?: number
+  weight: number
 }
 
-export type Attempt = {
-  challengeId: string
-  answer: string
-  objectiveCorrect?: boolean
-  completedAt: string
+export type SkillProfile = {
+  skillId: SkillId
+  mastery: number | null
+  confidence: number
+  evidence: ProfileEvidence[]
+  gaps: {
+    implementation: GapStatus
+    vocabulary: GapStatus
+    design: GapStatus
+    retention: GapStatus
+  }
 }
 
-export type TutorSkillSignal = {
-  skill: SkillId
-  signal: EvidenceSignal
-  rationale: string
+export type TrackRecommendation = {
+  trackId: TrackId
+  score: number
+  evidenceConfidence: number
+  reason: string
 }
 
-export type TutorEvaluation = {
+export type MissionKind = 'engineering' | 'dsa' | 'review'
+export type MissionDefinition = {
   id: string
-  challengeId: string
-  createdAt: string
-  source: 'ai' | 'local-rubric'
-  summary: string
-  strengths: string[]
-  gaps: string[]
-  terminology: string[]
-  misconceptionTags: string[]
-  nextQuestion: string
-  signals: TutorSkillSignal[]
+  title: string
+  kind: MissionKind
+  skills: SkillId[]
+  tracks: TrackId[]
+  minutes: number
+  outcome: string
 }
-
-export type TutorHint = {
-  id: string
-  challengeId: string
-  createdAt: string
-  level: AssistanceLevel
-  text: string
-  source: 'ai' | 'preauthored'
-}
-
-export type TutorEvidence = {
-  evaluations: TutorEvaluation[]
-  hints: TutorHint[]
-}
+export type RoadmapItem = MissionDefinition & { why: string }
+export type RoadmapWeek = { week: number; theme: string; items: RoadmapItem[] }
 
 export type LearnerState = {
   xp: number
@@ -130,4 +106,5 @@ export type LearnerState = {
   languages: Record<string, CodeLanguage>
   codeRuns: Record<string, CodeRunResult[]>
   tutor: Record<string, TutorEvidence>
+  trackInterest: TrackInterest
 }

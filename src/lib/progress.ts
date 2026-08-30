@@ -10,6 +10,12 @@ export const emptyState: LearnerState = {
   languages: {},
   codeRuns: {},
   tutor: {},
+  trackInterest: {
+    'backend-platform': 4,
+    'ai-engineering': 4,
+    fde: 4,
+    'technical-leadership': 3,
+  },
 }
 
 export function loadState(): LearnerState {
@@ -25,16 +31,12 @@ export function loadState(): LearnerState {
       codeRuns: parsed.codeRuns ?? {},
       tutor: parsed.tutor ?? {},
       attempts: parsed.attempts ?? [],
+      trackInterest: { ...emptyState.trackInterest, ...(parsed.trackInterest ?? {}) },
     }
   } catch {
     return emptyState
   }
 }
 
-export function saveState(state: LearnerState) {
-  localStorage.setItem(KEY, JSON.stringify(state))
-}
-
-export function resetState() {
-  localStorage.removeItem(KEY)
-}
+export function saveState(state: LearnerState) { localStorage.setItem(KEY, JSON.stringify(state)) }
+export function resetState() { localStorage.removeItem(KEY) }
