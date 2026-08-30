@@ -1,5 +1,6 @@
 import type { LearnerState, SkillProfile } from '../domain'
 import { buildCareerReadiness } from '../lib/readiness'
+import './CareerSystems.css'
 
 export function CareerReadinessPanel({ state, profile }: { state: LearnerState; profile: SkillProfile[] }) {
   const areas = buildCareerReadiness(state, profile)
