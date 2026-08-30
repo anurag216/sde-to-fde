@@ -1,132 +1,15 @@
 import ts from 'typescript'
 import type { Challenge, CodeLanguage, CodeRunResult, CodeRunTestResult } from '../domain'
 
-type WorkerPayload = {
-  status: 'passed' | 'failed' | 'error'
-  tests?: CodeRunTestResult[]
-  error?: string
-}
-
-const javascriptWorkerSource = `
-const stable = (value) => {
-  if (Array.isArray(value)) return '[' + value.map(stable).join(',') + ']';
-  if (value && typeof value === 'object') {
-    return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + stable(value[key])).join(',') + '}';
-  }
-  return JSON.stringify(value);
-};
-self.onmessage = (event) => {
-  const { source, functionName, tests } = event.data;
-  try {
-    const module = { exports: {} };
-    const exports = module.exports;
-    const factory = new Function('module', 'exports', source + '\\n; return typeof ' + functionName + ' === "function" ? ' + functionName + ' : module.exports["' + functionName + '"];');
-    const fn = factory(module, exports);
-    if (typeof fn !== 'function') throw new Error('Expected a function named ' + functionName + '.');
-    const results = tests.map((test) => {
-      try {
-        const actual = fn(...test.args);
-        if (actual && typeof actual.then === 'function') throw new Error('Async solutions are not supported in this alpha runner.');
-        return { name: test.name, passed: stable(actual) === stable(test.expected), actual, expected: test.expected };
-      } catch (error) {
-        return { name: test.name, passed: false, error: error instanceof Error ? error.message : String(error) };
-      }
-    });
-    self.postMessage({ status: results.every((result) => result.passed) ? 'passed' : 'failed', tests: results });
-  } catch (error) {
-    self.postMessage({ status: 'error', error: error instanceof Error ? error.message : String(error), tests: [] });
-  }
-};
+type WorkerPayload={status:'passed'|'failed'|'error';tests?:CodeRunTestResult[];error?:string}
+const javascriptWorkerSource=`
+const stable=(value)=>{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map((key)=>JSON.stringify(key)+':'+stable(value[key])).join(',')+'}';return JSON.stringify(value)};
+self.onmessage=(event)=>{const {source,functionName,tests}=event.data;try{const module={exports:{}};const exports=module.exports;const factory=new Function('module','exports',source+'\\n; return typeof '+functionName+' === "function" ? '+functionName+' : module.exports["'+functionName+'"];');const fn=factory(module,exports);if(typeof fn!=='function')throw new Error('Expected a function named '+functionName+'.');const results=tests.map((test)=>{try{const actual=fn(...test.args);if(actual&&typeof actual.then==='function')throw new Error('Async solutions are not supported in this alpha runner.');return {name:test.name,passed:stable(actual)===stable(test.expected),actual,expected:test.expected}}catch(error){return {name:test.name,passed:false,error:error instanceof Error?error.message:String(error)}}});self.postMessage({status:results.every((result)=>result.passed)?'passed':'failed',tests:results})}catch(error){self.postMessage({status:'error',error:error instanceof Error?error.message:String(error),tests:[]})}};
 `
-
-const pythonWorkerSource = `
-self.onmessage = async (event) => {
-  const { source, functionName, tests } = event.data;
-  try {
-    importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');
-    const pyodide = await loadPyodide();
-    const payload = JSON.stringify(tests);
-    const script = source + '\\n\\n' +
-      'import json, traceback\\n' +
-      '_challenge_tests = json.loads(' + JSON.stringify(payload) + ')\\n' +
-      '_challenge_results = []\\n' +
-      'for _test in _challenge_tests:\\n' +
-      '    try:\\n' +
-      '        _actual = ' + functionName + '(*_test["args"])\\n' +
-      '        _challenge_results.append({"name": _test["name"], "passed": _actual == _test["expected"], "actual": _actual, "expected": _test["expected"]})\\n' +
-      '    except Exception as _error:\\n' +
-      '        _challenge_results.append({"name": _test["name"], "passed": False, "error": str(_error)})\\n' +
-      'json.dumps(_challenge_results)';
-    const raw = await pyodide.runPythonAsync(script);
-    const results = JSON.parse(raw);
-    self.postMessage({ status: results.every((result) => result.passed) ? 'passed' : 'failed', tests: results });
-  } catch (error) {
-    self.postMessage({ status: 'error', error: error instanceof Error ? error.message : String(error), tests: [] });
-  }
-};
+const pythonWorkerSource=`
+self.onmessage=async(event)=>{const {source,functionName,tests}=event.data;try{importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');const pyodide=await loadPyodide();const payload=JSON.stringify(tests);const script=source+'\\n\\n'+'import json\\n'+'_challenge_tests = json.loads('+JSON.stringify(payload)+')\\n'+'_challenge_results = []\\n'+'for _test in _challenge_tests:\\n'+'    try:\\n'+'        _actual = '+functionName+'(*_test["args"])\\n'+'        _challenge_results.append({"name": _test["name"], "passed": _actual == _test["expected"], "actual": _actual, "expected": _test["expected"]})\\n'+'    except Exception as _error:\\n'+'        _challenge_results.append({"name": _test["name"], "passed": False, "error": str(_error)})\\n'+'json.dumps(_challenge_results)';const raw=await pyodide.runPythonAsync(script);const results=JSON.parse(raw);self.postMessage({status:results.every((result)=>result.passed)?'passed':'failed',tests:results})}catch(error){self.postMessage({status:'error',error:error instanceof Error?error.message:String(error),tests:[]})}};
 `
-
-function createWorker(source: string) {
-  const blob = new Blob([source], { type: 'text/javascript' })
-  return new Worker(URL.createObjectURL(blob))
-}
-
-function id() {
-  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-export async function runCode(challenge: Challenge, language: CodeLanguage, source: string): Promise<CodeRunResult> {
-  const startedAt = new Date().toISOString()
-  const start = performance.now()
-  const config = challenge.coding
-  if (!config) throw new Error('Challenge has no executable coding configuration.')
-
-  let executableSource = source
-  if (language === 'typescript') {
-    const compiled = ts.transpileModule(source, {
-      compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
-      reportDiagnostics: true,
-    })
-    const errors = compiled.diagnostics?.filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error) ?? []
-    if (errors.length) {
-      return {
-        id: id(), challengeId: challenge.id, language, source, startedAt,
-        durationMs: Math.round(performance.now() - start), status: 'error', tests: [],
-        error: errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'),
-      }
-    }
-    executableSource = compiled.outputText
-  }
-
-  const worker = createWorker(language === 'python' ? pythonWorkerSource : javascriptWorkerSource)
-  const workerUrl = worker
-
-  return new Promise((resolve) => {
-    let settled = false
-    const finish = (payload: WorkerPayload | { status: 'timeout'; error: string }) => {
-      if (settled) return
-      settled = true
-      worker.terminate()
-      resolve({
-        id: id(), challengeId: challenge.id, language, source, startedAt,
-        durationMs: Math.round(performance.now() - start),
-        status: payload.status,
-        tests: 'tests' in payload ? payload.tests ?? [] : [],
-        error: payload.error,
-      })
-    }
-
-    const timeout = window.setTimeout(() => finish({ status: 'timeout', error: `Execution exceeded ${config.timeLimitMs}ms and was terminated.` }), config.timeLimitMs)
-    worker.onmessage = (event: MessageEvent<WorkerPayload>) => {
-      window.clearTimeout(timeout)
-      finish(event.data)
-    }
-    worker.onerror = (event) => {
-      window.clearTimeout(timeout)
-      finish({ status: 'error', error: event.message || 'Worker execution failed.' })
-    }
-    workerUrl.postMessage({ source: executableSource, functionName: config.functionName, tests: config.tests })
-  })
-}
+function createWorker(source:string){const blob=new Blob([source],{type:'text/javascript'});return new Worker(URL.createObjectURL(blob))}
+function id(){return typeof crypto!=='undefined'&&'randomUUID'in crypto?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`}
+export async function runCode(challenge:Challenge,language:CodeLanguage,source:string):Promise<CodeRunResult>{const startedAt=new Date().toISOString();const start=performance.now();const config=challenge.coding;if(!config)throw new Error('Challenge has no executable coding configuration.');let executableSource=source;if(language==='typescript'){const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None},reportDiagnostics:true});const errors=compiled.diagnostics?.filter((diagnostic)=>diagnostic.category===ts.DiagnosticCategory.Error)??[];if(errors.length)return{id:id(),challengeId:challenge.id,language,source,startedAt,durationMs:Math.round(performance.now()-start),status:'error',tests:[],error:errors.map((error)=>ts.flattenDiagnosticMessageText(error.messageText,'\n')).join('\n')};executableSource=compiled.outputText}
+const worker=createWorker(language==='python'?pythonWorkerSource:javascriptWorkerSource);return new Promise((resolve)=>{let settled=false;const wallLimit=language==='python'?Math.max(config.timeLimitMs,15000):config.timeLimitMs;const finish=(payload:WorkerPayload|{status:'timeout';error:string})=>{if(settled)return;settled=true;worker.terminate();resolve({id:id(),challengeId:challenge.id,language,source,startedAt,durationMs:Math.round(performance.now()-start),status:payload.status,tests:'tests'in payload?payload.tests??[]:[],error:payload.error})};const timeout=window.setTimeout(()=>finish({status:'timeout',error:`Execution exceeded ${wallLimit}ms and was terminated.`}),wallLimit);worker.onmessage=(event:MessageEvent<WorkerPayload>)=>{window.clearTimeout(timeout);finish(event.data)};worker.onerror=(event)=>{window.clearTimeout(timeout);finish({status:'error',error:event.message||'Worker execution failed.'})};worker.postMessage({source:executableSource,functionName:config.functionName,tests:config.tests})})}
