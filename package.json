@@ -1,11 +1,12 @@
 {
   "name": "sde-to-fde",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server/index.ts",
     "build": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.server.json && vite build",
+    "test": "tsx --test src/lib/*.test.ts",
     "preview": "vite preview",
     "start": "NODE_ENV=production tsx server/index.ts"
   },
