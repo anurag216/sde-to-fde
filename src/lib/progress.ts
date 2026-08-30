@@ -1,6 +1,6 @@
 import type { LearnerState } from '../domain'
 
-const KEY = 'sde-to-fde:learner-state:v2'
+const KEY = 'sde-to-fde:learner-state:v3'
 
 export const emptyState: LearnerState = {
   xp: 0,
@@ -9,6 +9,7 @@ export const emptyState: LearnerState = {
   drafts: {},
   languages: {},
   codeRuns: {},
+  tutor: {},
 }
 
 export function loadState(): LearnerState {
@@ -22,6 +23,7 @@ export function loadState(): LearnerState {
       drafts: parsed.drafts ?? {},
       languages: parsed.languages ?? {},
       codeRuns: parsed.codeRuns ?? {},
+      tutor: parsed.tutor ?? {},
       attempts: parsed.attempts ?? [],
     }
   } catch {
