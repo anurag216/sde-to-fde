@@ -1,4 +1,5 @@
 import { yearJourney } from '../data/yearJourney'
+import './YearJourney.css'
 
 export function YearJourney() {
   return <section className="year-journey">
