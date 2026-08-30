@@ -19,6 +19,8 @@ export type Skill = {
 
 export type ChallengeType = 'multiple-choice' | 'free-response' | 'coding'
 export type CodeLanguage = 'typescript' | 'javascript' | 'python'
+export type AssistanceLevel = 1 | 2 | 3 | 4 | 5 | 6
+export type EvidenceSignal = 'strong' | 'partial' | 'weak' | 'unknown'
 
 export type CodeTest = {
   name: string
@@ -35,6 +37,14 @@ export type CodingConfig = {
   timeLimitMs: number
 }
 
+export type RubricCriterion = {
+  id: string
+  label: string
+  description: string
+  skills: SkillId[]
+  keywords?: string[]
+}
+
 export type Challenge = {
   id: string
   title: string
@@ -47,6 +57,8 @@ export type Challenge = {
   placeholder?: string
   evidence: string
   coding?: CodingConfig
+  rubric?: RubricCriterion[]
+  hints?: string[]
 }
 
 export type CodeRunTestResult = {
@@ -76,6 +88,40 @@ export type Attempt = {
   completedAt: string
 }
 
+export type TutorSkillSignal = {
+  skill: SkillId
+  signal: EvidenceSignal
+  rationale: string
+}
+
+export type TutorEvaluation = {
+  id: string
+  challengeId: string
+  createdAt: string
+  source: 'ai' | 'local-rubric'
+  summary: string
+  strengths: string[]
+  gaps: string[]
+  terminology: string[]
+  misconceptionTags: string[]
+  nextQuestion: string
+  signals: TutorSkillSignal[]
+}
+
+export type TutorHint = {
+  id: string
+  challengeId: string
+  createdAt: string
+  level: AssistanceLevel
+  text: string
+  source: 'ai' | 'preauthored'
+}
+
+export type TutorEvidence = {
+  evaluations: TutorEvaluation[]
+  hints: TutorHint[]
+}
+
 export type LearnerState = {
   xp: number
   currentChallengeIndex: number
@@ -83,4 +129,5 @@ export type LearnerState = {
   drafts: Record<string, string>
   languages: Record<string, CodeLanguage>
   codeRuns: Record<string, CodeRunResult[]>
+  tutor: Record<string, TutorEvidence>
 }

@@ -24,6 +24,14 @@ export const diagnosticChallenges: Challenge[] = [
     ],
     correctOption: 1,
     evidence: 'Recognizes hash-based lookup and grouping without requiring textbook terminology.',
+    hints: [
+      'Think about what operation becomes expensive if you scan all previous requests each time.',
+      'Separate the two jobs: “have I seen this ID?” and “which employee owns this request?”',
+      'Which built-in structures are designed for membership checks and key → value grouping?',
+      'Use one structure for seen IDs and another keyed by employee.',
+      'A Set can track IDs while a Map/dictionary can accumulate each employee’s request IDs.',
+      'Use a Set for processed request IDs and a Map/dictionary keyed by employee, then process each input request once.',
+    ],
   },
   {
     id: 'duplicate-job',
@@ -34,6 +42,20 @@ export const diagnosticChallenges: Challenge[] = [
     prompt: 'Describe how you would prevent the second delivery from causing the business action twice. Use whatever terminology you currently know.',
     placeholder: 'Explain your design, state you would store, and what happens on retry…',
     evidence: 'Tests practical understanding of idempotency, durable state and retry semantics.',
+    rubric: [
+      { id: 'idempotency-key', label: 'Stable operation identity', description: 'Uses a stable request/operation key so retries refer to the same logical action.', skills: ['backend', 'distributed-systems'], keywords: ['idempotency', 'idempotent', 'request id', 'operation id', 'dedupe'] },
+      { id: 'durable-state', label: 'Durable result/state', description: 'Records completion/result durably rather than relying only on process memory.', skills: ['backend', 'system-design'], keywords: ['database', 'durable', 'persist', 'status', 'completed'] },
+      { id: 'atomicity', label: 'Race-safe decision', description: 'Considers atomic insert/update, uniqueness, transaction or compare-and-set to prevent concurrent duplicates.', skills: ['distributed-systems', 'system-design'], keywords: ['transaction', 'unique constraint', 'atomic', 'lock', 'compare and set'] },
+      { id: 'retry-semantics', label: 'Retry behavior', description: 'Explains what a redelivery returns/does after the first action succeeded.', skills: ['backend', 'distributed-systems'], keywords: ['retry', 'redelivery', 'ack', 'return stored result', 'already processed'] },
+    ],
+    hints: [
+      'Assume the queue can legally deliver the same message more than once. What state lets the worker recognize the same logical operation?',
+      'Think about giving each business action a stable identity that survives worker crashes.',
+      'Where would you store “this operation already succeeded” so another worker can see it?',
+      'Sketch the decision as: receive message → atomically check/claim operation ID → perform or reuse result → acknowledge.',
+      'Use a durable idempotency record keyed by operation/request ID, protected by a transaction/unique constraint so concurrent retries cannot both claim it.',
+      'A strong design uses a stable idempotency key, durable operation state/result, a race-safe claim (e.g. transaction + unique constraint), and on redelivery returns/reuses the recorded result instead of repeating the side effect before acknowledging the queue message.',
+    ],
   },
   {
     id: 'slow-query',
@@ -50,6 +72,14 @@ export const diagnosticChallenges: Challenge[] = [
     ],
     correctOption: 1,
     evidence: 'Tests database-first diagnosis rather than infrastructure guessing.',
+    hints: [
+      'First prove where the time is being spent before scaling unrelated components.',
+      'The bottleneck is a database query. What tool shows how PostgreSQL executes it?',
+      'Look at EXPLAIN/EXPLAIN ANALYZE and the indexes available for the filter pattern.',
+      'Inspect the plan for sequential scans, row estimates and whether an index on the relevant columns could help.',
+      'Start with EXPLAIN ANALYZE and inspect current indexes before proposing a composite/partial index.',
+      'The best first investigation is the query plan plus existing indexes; only then choose an index/query rewrite based on evidence.',
+    ],
   },
   {
     id: 'agent-boundary',
@@ -60,6 +90,20 @@ export const diagnosticChallenges: Challenge[] = [
     prompt: 'Where would you allow probabilistic AI behavior, and where would you require deterministic checks or human confirmation? Explain why.',
     placeholder: 'Describe the boundaries and failure modes you care about…',
     evidence: 'Tests production AI judgment, guardrails and separation of probabilistic from deterministic components.',
+    rubric: [
+      { id: 'probabilistic-boundary', label: 'Appropriate probabilistic tasks', description: 'Uses the model for interpretation/summarization/recommendation rather than final authority over irreversible actions.', skills: ['ai-engineering'], keywords: ['summarize', 'classify', 'interpret', 'recommend', 'draft'] },
+      { id: 'deterministic-controls', label: 'Deterministic authorization and validation', description: 'Requires deterministic identity, authorization, schema and business-rule checks around tools/actions.', skills: ['ai-engineering', 'system-design'], keywords: ['authorization', 'permission', 'schema', 'validate', 'deterministic', 'allowlist'] },
+      { id: 'human-loop', label: 'Human confirmation for material actions', description: 'Identifies when explicit human confirmation is needed based on risk/reversibility.', skills: ['fde', 'system-design'], keywords: ['human', 'confirm', 'approval', 'review', 'high risk'] },
+      { id: 'auditability', label: 'Audit and failure handling', description: 'Mentions audit logs, explicit tool results, retries/fallbacks and handling uncertain model output.', skills: ['ai-engineering', 'fde'], keywords: ['audit', 'log', 'fallback', 'retry', 'uncertain'] },
+    ],
+    hints: [
+      'Split the workflow into “understand what the user means” and “authorize/execute a real-world side effect.” Should both be probabilistic?',
+      'Consider risk, reversibility and authority. Which steps must never depend only on model confidence?',
+      'Think deterministic identity/permission/business-rule checks around any tool call, plus confirmation for high-impact actions.',
+      'A useful boundary is: model interprets/recommends → deterministic policy validates → human confirms when risk warrants → deterministic executor acts → audit result.',
+      'Also consider malformed tool arguments, prompt injection, stale context, ambiguous intent, retries and auditability.',
+      'Use AI for interpretation, summarization and recommendation; require deterministic schema/authorization/business-rule validation before execution, explicit human confirmation for material/ambiguous actions, deterministic tool invocation, and durable audit/failure handling around the result.',
+    ],
   },
   {
     id: 'no-api-customer',
@@ -70,6 +114,20 @@ export const diagnosticChallenges: Challenge[] = [
     prompt: 'Before proposing architecture, list the most important questions you would ask the customer and explain which answers could change your design.',
     placeholder: 'Think identity, security, volume, failure handling, ownership, rollout, UX…',
     evidence: 'Tests discovery quality and whether the learner resists prematurely jumping into implementation.',
+    rubric: [
+      { id: 'workflow', label: 'Current workflow and value', description: 'Clarifies actors, volume, time spent, exceptions and desired outcome.', skills: ['fde', 'technical-leadership'], keywords: ['volume', 'frequency', 'time', 'workflow', 'exception', 'outcome'] },
+      { id: 'identity-security', label: 'Identity/security constraints', description: 'Clarifies authentication, authorization, device/VPN/session constraints and audit requirements.', skills: ['fde', 'system-design'], keywords: ['authentication', 'authorization', 'identity', 'vpn', 'device', 'audit', 'security'] },
+      { id: 'system-constraints', label: 'System and automation constraints', description: 'Investigates UI stability, SSO/MFA, rate limits, bot detection, data sensitivity and available integration hooks.', skills: ['fde', 'system-design'], keywords: ['sso', 'mfa', 'ui', 'rate limit', 'integration', 'webhook', 'sensitive'] },
+      { id: 'reliability-rollout', label: 'Failure and rollout model', description: 'Clarifies retries, partial failure, support ownership, pilot, observability and rollback/adoption.', skills: ['fde', 'technical-leadership'], keywords: ['failure', 'retry', 'pilot', 'rollout', 'rollback', 'support', 'monitor'] },
+    ],
+    hints: [
+      'Do not design yet. First identify what you need to know about people, workflow, systems, risk and success.',
+      'What answers could completely invalidate a browser-automation approach—for example identity, MFA, device policy or UI stability?',
+      'Group discovery questions into workflow/value, identity/security, system constraints, reliability/operations, and rollout/adoption.',
+      'For every question, add “what design decision changes depending on the answer?”',
+      'Include volume/latency, user identity model, authentication/VPN/device constraints, UI variability, failure semantics, audit/security requirements, pilot population, support ownership and success metrics.',
+      'A strong discovery pass establishes current workflow/value and volumes; identity/auth/VPN/device constraints; UI/SSO/MFA/security/audit limitations; failure/retry/exception paths; ownership/support; rollout/pilot/adoption and success metrics—then uses those answers to choose whether UI automation is viable and where execution should live.',
+    ],
   },
   {
     id: 'coding-transform',
@@ -80,6 +138,19 @@ export const diagnosticChallenges: Challenge[] = [
     prompt: 'Implement groupPending(requests). Return an object/dictionary keyed by employee where each value is an array of unique pending request IDs.',
     placeholder: '// Write the solution you would naturally produce at work\n',
     evidence: 'Tests implementation ability, hash-based data structures, edge cases and performance intuition.',
+    rubric: [
+      { id: 'single-pass', label: 'Linear scan', description: 'Processes each request without nested rescans of accumulated data.', skills: ['programming', 'dsa'], keywords: ['for', 'forEach', 'loop'] },
+      { id: 'dedupe-structure', label: 'Efficient deduplication', description: 'Uses a set/hash structure for membership rather than repeatedly scanning arrays.', skills: ['dsa'], keywords: ['set', 'seen', 'has'] },
+      { id: 'grouping-structure', label: 'Efficient grouping', description: 'Uses a map/dictionary/object keyed by employee.', skills: ['programming', 'dsa'], keywords: ['map', 'dict', 'object', 'employee'] },
+    ],
+    hints: [
+      'Try to make each request require only constant-time bookkeeping rather than scanning what you have already built.',
+      'You need two pieces of state: whether an ID has been seen, and the list for each employee.',
+      'A Set handles seen IDs; a Map/dictionary/object can hold employee → IDs.',
+      'Pseudo-steps: initialize seen + grouped; loop requests; skip non-pending/seen; mark seen; append ID under employee; return grouped.',
+      'The core is one pass with hash-based membership and grouping. Be careful to mark duplicate IDs globally before appending.',
+      'Example approach: create `seen = new Set()` and `grouped = {}`; for each pending request not in `seen`, add its ID to `seen`, initialize `grouped[employee]` if needed, append the ID, and return `grouped`. This is O(n) average time with O(n) auxiliary space.',
+    ],
     coding: {
       functionName: 'groupPending',
       languages: ['typescript', 'javascript', 'python'],
@@ -90,25 +161,9 @@ export const diagnosticChallenges: Challenge[] = [
         python: `def groupPending(requests):\n    # Your implementation\n    return {}`,
       },
       tests: [
-        {
-          name: 'groups pending requests and removes duplicate IDs',
-          args: [requestFixture],
-          expected: { alice: ['r1', 'r3'], bob: ['r2'] },
-        },
-        {
-          name: 'ignores non-pending requests',
-          args: [[
-            { id: 'a', employee: 'sam', status: 'approved' },
-            { id: 'b', employee: 'sam', status: 'rejected' },
-          ]],
-          expected: {},
-        },
-        {
-          name: 'handles empty input',
-          args: [[]],
-          expected: {},
-          hidden: true,
-        },
+        { name: 'groups pending requests and removes duplicate IDs', args: [requestFixture], expected: { alice: ['r1', 'r3'], bob: ['r2'] } },
+        { name: 'ignores non-pending requests', args: [[{ id: 'a', employee: 'sam', status: 'approved' }, { id: 'b', employee: 'sam', status: 'rejected' }]], expected: {} },
+        { name: 'handles empty input', args: [[]], expected: {}, hidden: true },
       ],
     },
   },
