@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import type { AddressInfo } from 'node:net'
 import test from 'node:test'
-import { createApiApp } from './app'
+import { createApiApp } from './app.js'
 
 test('server exposes health and safe tutor fallback without an API key', async () => {
   const previous = process.env.OPENAI_API_KEY
@@ -28,7 +28,7 @@ test('server exposes health and safe tutor fallback without an API key', async (
     const tutorBody = await tutor.json() as { error:string }
     assert.match(tutorBody.error, /local rubric fallback/i)
   } finally {
-    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
+    await new Promise<void>((resolve, reject) => server.close((error: Error | undefined) => error ? reject(error) : resolve()))
     if (previous === undefined) delete process.env.OPENAI_API_KEY
     else process.env.OPENAI_API_KEY = previous
   }
